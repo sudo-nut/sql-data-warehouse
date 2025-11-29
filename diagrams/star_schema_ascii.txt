@@ -1,1 +1,23 @@
--- ASCII art of the star schema
++-----------+
+| dim_date  |
++-----------+
+      ^
+      |
+      |
++-----------+   +---------+   |   +-----------+   +-----------+
+| dim_artist|<---| dim_song|<----| fact_streams |-->| dim_market|
++-----------+   +---------+       +-----------+   +-----------+
+                                        |
+                                        v
+                                  +-----------+
+                                  | dim_user  | (optional)
+                                  +-----------+
+
+
+Relationships:
+- fact_streams.song_id -> dim_song.song_id
+- fact_streams.date_id -> dim_date.date_id
+- fact_streams.market_id -> dim_market.market_id
+
+
+This is a typical star schema: one central fact table (fact_streams) surrounded by small dimension tables.
