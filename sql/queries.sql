@@ -1,1 +1,0 @@
--- SQL script for analytical queries

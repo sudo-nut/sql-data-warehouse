@@ -1,0 +1,1 @@
+-- ASCII art of the star schema
