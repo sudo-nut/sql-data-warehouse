@@ -1,23 +1,73 @@
-+-----------+
-| dim_date  |
-+-----------+
-      ^
-      |
-      |
-+-----------+   +---------+   |   +-----------+   +-----------+
-| dim_artist|<---| dim_song|<----| fact_streams |-->| dim_market|
-+-----------+   +---------+       +-----------+   +-----------+
-                                        |
-                                        v
-                                  +-----------+
-                                  | dim_user  | (optional)
-                                  +-----------+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        STAR SCHEMA - Music Streaming DW                     │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+                              ┌─────────────────┐
+                              │   dim_date      │
+                              ├─────────────────┤
+                              │ date_id (PK)    │
+                              │ date (UNIQUE)   │
+                              │ day             │
+                              │ month           │
+                              │ year            │
+                              │ quarter         │
+                              └────────┬────────┘
+                                       │
+                                       │ 1:M
+                                       │
+┌─────────────────┐          ┌─────────────────┐          ┌─────────────────┐
+│  dim_artist     │          │   dim_song      │          │  dim_market     │
+├─────────────────┤          ├─────────────────┤          ├─────────────────┤
+│ artist_id (PK)  │◄────────┤ song_id (PK)    │          │ market_id (PK)  │
+│ artist_name     │   1:M    │ raw_track_id    │          │ market_code     │
+│ country         │          │ title           │          │ region          │
+│ first_seen      │          │ artist_id (FK)  │          └────────┬────────┘
+└─────────────────┘          │ album           │                   │
+                              │ duration_ms     │                   │
+                              │ popularity      │                   │
+                              │ danceability    │                   │
+                              │ energy          │                   │
+                              │ tempo           │                   │ M:1
+                              └────────┬────────┘                   │
+                                       │                            │
+                                       │ 1:M                        │
+                                       │                            │
+                              ┌────────▼────────────────────────────▼────────┐
+                              │          fact_streams (FACT TABLE)           │
+                              ├──────────────────────────────────────────────┤
+                              │ fact_id (PK)                                 │
+                              │ song_id (FK) ──────────────────────►         │
+                              │ date_id (FK) ──────────────────────►         │
+                              │ market_id (FK) ────────────────────►         │
+                              │ streams_count (MEASURE)                      │
+                              │ popularity_score (MEASURE)                   │
+                              │ inserted_at                                  │
+                              └──────────────────────────────────────────────┘
+                                                 ▲
+                                                 │
+                                                 │ ETL
+                                                 │
+                              ┌──────────────────┴───────────────────────────┐
+                              │          stg_tracks (STAGING)                │
+                              ├──────────────────────────────────────────────┤
+                              │ raw_track_id, title, artist_name, album,     │
+                              │ release_date, duration_ms, popularity,       │
+                              │ danceability, energy, key, loudness, mode,   │
+                              │ speechiness, acousticness, instrumentalness, │
+                              │ liveness, valence, tempo, track_genre,       │
+                              │ market, stream_date                          │
+                              └──────────────────────────────────────────────┘
 
 
 Relationships:
-- fact_streams.song_id -> dim_song.song_id
-- fact_streams.date_id -> dim_date.date_id
-- fact_streams.market_id -> dim_market.market_id
+═══════════════════════════════════════════════════════════════════════════════
+• fact_streams.song_id    →  dim_song.song_id      (Many-to-One)
+• fact_streams.date_id    →  dim_date.date_id      (Many-to-One)
+• fact_streams.market_id  →  dim_market.market_id  (Many-to-One)
+• dim_song.artist_id      →  dim_artist.artist_id  (Many-to-One)
 
-
-This is a typical star schema: one central fact table (fact_streams) surrounded by small dimension tables.
+This is a typical star schema: 
+- ONE central fact table (fact_streams) at the center
+- FOUR dimension tables (dim_song, dim_date, dim_market, dim_artist) around it
+- Simple, denormalized structure optimized for analytical queries
+- Efficient JOIN performance with indexed foreign keys
