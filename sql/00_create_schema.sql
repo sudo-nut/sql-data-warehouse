@@ -1,5 +1,9 @@
 -- Use PostgreSQL syntax
-CREATE SEQUENCE seq_user_id START 1; -- optional
+-- Create sequences for primary keys
+CREATE SEQUENCE IF NOT EXISTS seq_artist_id START 1;
+CREATE SEQUENCE IF NOT EXISTS seq_song_id START 1;
+CREATE SEQUENCE IF NOT EXISTS seq_market_id START 1;
+CREATE SEQUENCE IF NOT EXISTS seq_date_id START 1;
 
 
 -- Staging table (raw data landing zone)
